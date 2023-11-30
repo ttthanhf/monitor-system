@@ -1,0 +1,19 @@
+{
+  "dependencies": {
+    "systeminformation": "^5.21.18"
+  },
+  "name": "monitoring-system",
+  "version": "1.0.0",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node ./src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

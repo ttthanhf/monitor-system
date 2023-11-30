@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Monitoring system by ThanhF</title>
+    <link href="/libs/css/epoch.min.css" rel="stylesheet">
+    <script src="/libs/js/jquery.min.js"></script>
+    <script src="/libs/js/d3.v3.min.js"></script>
+    <script src="/libs/js/epoch.min.js"></script>
+
+    <style>
+        .itemHeader {
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            width: 500px;
+        }
+
+        .internetLabel {
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+        }
+    </style>
+</head>
+
+<body class="">
+    <div class="header" style="display: flex;">
+        <div class="cpu itemHeader">
+            <h1>CPU</h1>
+            <div id="gaugeChartCPU" class="epoch gauge-small"></div>
+            <div id="lineChartCPU" class="epoch category10" style="width:320px; height: 240px;"></div>
+        </div>
+        <div class="ram itemHeader">
+            <h1>RAM</h1>
+            <div id="gaugeChartRAM" class="epoch gauge-small"></div>
+            <div id="lineChartRAM" class="epoch category10" style="width:320px; height: 240px;"></div>
+        </div>
+        <div class="internet itemHeader" style="position: relative;">
+            <h1>Internet</h1>
+            <div id="gaugeChartempty" class="epoch gauge-small"></div>
+            <div style="position: absolute; top: 160px;">
+                <span class="internetLabel" style="color: blue;">Recieve</span>
+                <br>
+                <span class="internetLabel" style="color: orange;">Tranfer</span>
+            </div>
+            <div id="lineChartInternet" class="epoch category10" style="width:320px; height: 240px;"></div>
+        </div>
+    </div>
+</body>
+<script>
+
+    function createGaugeChart(selector) {
+        return $(selector).epoch({
+            type: 'time.gauge',
+            value: 0,
+            fps: 30
+        });
+    }
+
+    function createLineChart(selector) {
+        return $(selector).epoch({
+            type: 'time.line',
+            axes: ['right', 'bottom', 'left'],
+            data: [{
+                label: 'Series 1',
+                values: []
+            }],
+            ticks: { time: 20, right: 10, left: 10 },
+            windowSize: 60 * 1,
+            width: 400,
+            historySize: 1,
+            queueSize: 1,
+            fps: 30
+        });
+    }
+
+    function createDoubleLineChart(selector) {
+        return $(selector).epoch({
+            type: 'time.line',
+            axes: ['right', 'bottom', 'left'],
+            data: [{
+                label: 'Recieve',
+                values: []
+            }, {
+                label: 'Tranfer',
+                values: []
+            }],
+            ticks: { time: 20, right: 10, left: 10 },
+            windowSize: 60 * 1,
+            width: 400,
+            historySize: 1,
+            queueSize: 1,
+            fps: 30
+        });
+    }
+
+    function updateChart(gaugeChart, lineChart, usage) {
+        gaugeChart.update(usage);
+        const currentTime = Math.floor(new Date().getTime() / 1000);
+        const newChartData = [{ time: currentTime, y: usage * 100 }];
+        lineChart.push(newChartData);
+    }
+
+    function updateDoubleLineChart(doubleLineChart, receive_value, tranfer_value) {
+        const currentTime = Math.floor(new Date().getTime() / 1000);
+        const newChartData = [{ time: currentTime, y: receive_value }, { time: currentTime, y: tranfer_value }];
+        doubleLineChart.push(newChartData);
+    }
+
+    const gaugeChartCPU = createGaugeChart('#gaugeChartCPU');
+    const lineChartCPU = createLineChart('#lineChartCPU');
+    const gaugeChartRAM = createGaugeChart('#gaugeChartRAM');
+    const lineChartRAM = createLineChart('#lineChartRAM');
+
+    const lineChartInternet = createDoubleLineChart('#lineChartInternet');
+
+    const eventSource = new EventSource('http://localhost:10000/stream');
+    eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+
+        updateChart(gaugeChartCPU, lineChartCPU, data.cpuUsage);
+        updateChart(gaugeChartRAM, lineChartRAM, data.ramUsage);
+        updateDoubleLineChart(lineChartInternet, data.internetUsage.receive, data.internetUsage.tranfer);
+    };
+
+</script>
+
+</html>
