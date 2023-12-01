@@ -1,9 +1,9 @@
-<div style="text-align: center;">
-    <p style="font-size: 40px; font-weight: bold;">Monitor System</p>
-    <p style="font-size: 20px; font-weight: bold;">System monitoring supports linux and windows</p>
+<div align="center">
+    <h1>Monitor System</h1>
+    <h3>System monitoring supports linux and windows</h3>
 </div>
-<div style="text-align: center;">
-
+<div align="center">
+    <br>
 </div>
 
 ## The monitor system project
