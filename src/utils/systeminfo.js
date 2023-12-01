@@ -27,11 +27,43 @@ function cpuPercent(delay = 1000) {
     });
 }
 
-function ramPercent() {
-    const totalMemory = os.totalmem();
-    const freeMemory = os.freemem();
-    const percentUsed = ((totalMemory - freeMemory) / totalMemory) * 100;
-    return percentUsed;
+function ramInfo() {
+    let totalMemory = os.totalmem();
+    let freeMemory = os.freemem();
+    let usedMemory = (totalMemory - freeMemory)
+    let percentUsed = (usedMemory / totalMemory) * 100;
+
+    return {
+        percentUsed,
+        totalMemory,
+        usedMemory
+    };
+}
+
+async function swapInfo() {
+    const swapData = await si.mem();
+    let totalSwap = swapData.swaptotal;
+    let usedSwap = swapData.swapused;
+    let percentUsed = (usedSwap / totalSwap) * 100;
+
+    return {
+        totalSwap,
+        usedSwap,
+        percentUsed
+    }
+}
+
+async function diskInfo() {
+    const diskData = await si.fsSize();
+    let totalDisk = diskData[0].size;
+    let usedDisk = diskData[0].used;
+    let percentUsed = (usedDisk / totalDisk) * 100;
+
+    return {
+        totalDisk,
+        usedDisk,
+        percentUsed
+    }
 }
 
 async function netUsage() {
@@ -42,8 +74,15 @@ async function netUsage() {
         .catch(error => { });
 }
 
+function uptimeServer() {
+    return os.uptime()
+}
+
 module.exports = {
     cpuPercent,
-    ramPercent,
-    netUsage
+    ramInfo,
+    swapInfo,
+    diskInfo,
+    netUsage,
+    uptimeServer
 }

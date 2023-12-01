@@ -9,44 +9,137 @@
     <script src="/libs/js/epoch.min.js"></script>
 
     <style>
+        body {
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
         .itemHeader {
             display: flex;
             align-items: center;
+            justify-content: center;
             flex-direction: column;
-            width: 500px;
-        }
-
-        .internetLabel {
-            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
         }
     </style>
 </head>
 
-<body class="">
-    <div class="header" style="display: flex;">
-        <div class="cpu itemHeader">
-            <h1>CPU</h1>
-            <div id="gaugeChartCPU" class="epoch gauge-small"></div>
-            <div id="lineChartCPU" class="epoch category10" style="width:320px; height: 240px;"></div>
-        </div>
-        <div class="ram itemHeader">
-            <h1>RAM</h1>
-            <div id="gaugeChartRAM" class="epoch gauge-small"></div>
-            <div id="lineChartRAM" class="epoch category10" style="width:320px; height: 240px;"></div>
-        </div>
-        <div class="internet itemHeader" style="position: relative;">
-            <h1>Internet</h1>
-            <div id="gaugeChartempty" class="epoch gauge-small"></div>
-            <div style="position: absolute; top: 160px;">
-                <span class="internetLabel" style="color: blue;">Recieve</span>
-                <br>
-                <span class="internetLabel" style="color: orange;">Tranfer</span>
+<body>
+    <div class="container">
+        <div class="header" style="display: flex; flex-wrap: wrap; gap: 50px 25vh;">
+            <div class="cpu itemHeader">
+                <h1>CPU</h1>
+                <div id="gaugeChartCPU" class="epoch gauge-small"></div>
+                <div id="lineChartCPU" class="epoch category10" style="width:320px; height: 240px;"></div>
             </div>
-            <div id="lineChartInternet" class="epoch category10" style="width:320px; height: 240px;"></div>
+            <div class="ram itemHeader">
+                <h1>RAM</h1>
+                <div id="gaugeChartRAM" class="epoch gauge-small"></div>
+                <div id="lineChartRAM" class="epoch category10" style="width:320px; height: 240px;"></div>
+                <span id="RAMInfo"></span>
+            </div>
+            <div class="internet itemHeader" style="position: relative;">
+                <h1>Internet</h1>
+                <div id="gaugeChartempty" class="epoch gauge-small"></div>
+                <div style="position: absolute; top: 160px;">
+                    <span style="color: blue;">Recieve : </span>
+                    <span id="receive_value"></span>
+                    <br>
+                    <span style="color: orange;">-Tranfer : </span>
+                    <span id="tranfer_value"></span>
+                </div>
+                <div id="lineChartInternet" class="epoch category10" style="width:320px; height: 240px;"></div>
+            </div>
+            <div class="swap itemHeader">
+                <h1>SWAP</h1>
+                <div id="gaugeChartSWAP" class="epoch gauge-small"></div>
+                <div id="lineChartSWAP" class="epoch category10" style="width:320px; height: 240px;"></div>
+                <span id="SWAPInfo"></span>
+            </div>
+            <div class="disk itemHeader">
+                <h1>DISK</h1>
+                <div id="gaugeChartDISK" class="epoch gauge-small"></div>
+                <div id="lineChartDISK" class="epoch category10" style="width:320px; height: 240px;"></div>
+                <span id="DISKInfo"></span>
+            </div>
+        </div>
+        <div class="main" style="margin: 100px 100px;">
+            <div class="system_uptime">
+                <span>Uptime:</span>
+                <span id="system_uptime_value"></span>
+            </div>
+            <div class="system_status">
+                <span>Status:</span>
+                <span id="system_status_value"></span>
+            </div>
+            <div class="system_time">
+                <span>System time:</span>
+                <span id="system_time_value"></span>
+            </div>
         </div>
     </div>
 </body>
 <script>
+
+    function currentDate() {
+        const currentDate = new Date();
+
+        const hours = ('0' + currentDate.getHours()).slice(-2);
+        const minutes = ('0' + currentDate.getMinutes()).slice(-2);
+        const seconds = ('0' + currentDate.getSeconds()).slice(-2);
+        const day = ('0' + currentDate.getDate()).slice(-2);
+        const month = ('0' + (currentDate.getMonth() + 1)).slice(-2);
+        const year = currentDate.getFullYear();
+
+        const timezoneOffsetInMinutes = currentDate.getTimezoneOffset();
+        const timezoneOffsetHours = ('0' + Math.floor(Math.abs(timezoneOffsetInMinutes) / 60)).slice(-2);
+        const timezoneOffsetMinutes = ('0' + (Math.abs(timezoneOffsetInMinutes) % 60)).slice(-2);
+        const timezoneOffsetStr = (timezoneOffsetInMinutes > 0 ? '-' : '+') + timezoneOffsetHours + ':' + timezoneOffsetMinutes;
+
+        const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thus', 'Fri', 'Sat'];
+        const dayOfWeekIndex = currentDate.getDay();
+        const dayOfWeek = daysOfWeek[dayOfWeekIndex];
+
+        const formattedDateTime = `${hours}:${minutes}:${seconds} - ${dayOfWeek}, ${day}/${month}/${year} - (${timezoneOffsetStr})`;
+
+        return formattedDateTime;
+    }
+
+    function secondsToHms(d) {
+        d = Number(d);
+        var h = Math.floor(d / 3600);
+        var m = Math.floor(d % 3600 / 60);
+        var s = Math.floor(d % 3600 % 60);
+
+        var hDisplay = h > 0 ? h + (h == 1 ? " hour, " : " hours, ") : "";
+        var mDisplay = m > 0 ? m + (m == 1 ? " minute, " : " minutes, ") : "";
+        var sDisplay = s > 0 ? s + (s == 1 ? " second" : " seconds") : " 0 second";
+        return hDisplay + mDisplay + sDisplay;
+    }
+
+    function formatBytes(bytes, decimals = 2) {
+        if (!+bytes) return '0 B'
+
+        const k = 1024
+        const dm = decimals < 0 ? 0 : decimals
+        const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
+
+        const i = Math.floor(Math.log(bytes) / Math.log(k))
+
+        return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
+    }
+
+    let optionsLineChart = {
+        ticks: { time: 30, right: 10, left: 10 },
+        windowSize: 60 * 2,
+        width: 500,
+        historySize: 1,
+        queueSize: 1,
+        fps: 30,
+        type: 'time.line',
+        axes: ['right', 'bottom', 'left'],
+    }
 
     function createGaugeChart(selector) {
         return $(selector).epoch({
@@ -58,38 +151,24 @@
 
     function createLineChart(selector) {
         return $(selector).epoch({
-            type: 'time.line',
-            axes: ['right', 'bottom', 'left'],
+            ...optionsLineChart,
             data: [{
                 label: 'Series 1',
                 values: []
             }],
-            ticks: { time: 20, right: 10, left: 10 },
-            windowSize: 60 * 1,
-            width: 400,
-            historySize: 1,
-            queueSize: 1,
-            fps: 30
         });
     }
 
     function createDoubleLineChart(selector) {
         return $(selector).epoch({
-            type: 'time.line',
-            axes: ['right', 'bottom', 'left'],
+            ...optionsLineChart,
             data: [{
                 label: 'Recieve',
                 values: []
             }, {
                 label: 'Tranfer',
                 values: []
-            }],
-            ticks: { time: 20, right: 10, left: 10 },
-            windowSize: 60 * 1,
-            width: 400,
-            historySize: 1,
-            queueSize: 1,
-            fps: 30
+            }]
         });
     }
 
@@ -106,22 +185,48 @@
         doubleLineChart.push(newChartData);
     }
 
+    function updateLabel(selector, data) {
+        document.querySelector(selector).innerHTML = data;
+    }
+
     const gaugeChartCPU = createGaugeChart('#gaugeChartCPU');
     const lineChartCPU = createLineChart('#lineChartCPU');
     const gaugeChartRAM = createGaugeChart('#gaugeChartRAM');
     const lineChartRAM = createLineChart('#lineChartRAM');
+    const gaugeChartSWAP = createGaugeChart('#gaugeChartSWAP');
+    const lineChartSWAP = createLineChart('#lineChartSWAP');
+    const gaugeChartDISK = createGaugeChart('#gaugeChartDISK');
+    const lineChartDISK = createLineChart('#lineChartDISK');
 
     const lineChartInternet = createDoubleLineChart('#lineChartInternet');
 
-    const eventSource = new EventSource('http://localhost:10000/stream');
+    let eventSource = new EventSource('REPLACE_WITH_DYNAMIC_URL');
     eventSource.onmessage = (event) => {
+
         const data = JSON.parse(event.data);
 
         updateChart(gaugeChartCPU, lineChartCPU, data.cpuUsage);
-        updateChart(gaugeChartRAM, lineChartRAM, data.ramUsage);
-        updateDoubleLineChart(lineChartInternet, data.internetUsage.receive, data.internetUsage.tranfer);
-    };
+        updateChart(gaugeChartRAM, lineChartRAM, data.ramUsage.percentUsed);
+        updateChart(gaugeChartSWAP, lineChartSWAP, data.swapUsage.percentUsed);
+        updateChart(gaugeChartDISK, lineChartDISK, data.diskUsage.percentUsed);
+        updateDoubleLineChart(lineChartInternet, data.internetUsage.receive / 1024, data.internetUsage.tranfer / 1024);
 
+        updateLabel('#RAMInfo', formatBytes(data.ramUsage.usedMemory) + " / " + formatBytes(data.ramUsage.totalMemory));
+        updateLabel('#SWAPInfo', formatBytes(data.swapUsage.usedSwap) + " / " + formatBytes(data.swapUsage.totalSwap));
+        updateLabel('#DISKInfo', formatBytes(data.diskUsage.usedDisk) + " / " + formatBytes(data.diskUsage.totalDisk));
+
+        updateLabel('#receive_value', formatBytes(data.internetUsage.receive));
+        updateLabel('#tranfer_value', formatBytes(data.internetUsage.tranfer));
+
+        updateLabel('#system_uptime_value', secondsToHms(data.uptime));
+
+        updateLabel('#system_status_value', '<span style="color: green;">UP</span>');
+
+        updateLabel('#system_time_value', currentDate())
+    };
+    eventSource.onerror = (e) => {
+        updateLabel('#system_status_value', '<span style="color: red;">DOWN</span>');
+    }
 </script>
 
 </html>
