@@ -1,6 +1,8 @@
 const os = require('os');
 const si = require('systeminformation');
 
+const { formatDate, secondsToHms } = require('./format')
+
 function cpuAverage() {
     var totalIdle = 0, totalTick = 0;
     var cpus = os.cpus();
@@ -75,7 +77,13 @@ async function netUsage() {
 }
 
 function uptimeServer() {
-    return os.uptime()
+    return secondsToHms(os.uptime())
+}
+
+function timeSystem() {
+    let timenow = new Date();
+    timenow = formatDate(timenow)
+    return timenow;
 }
 
 module.exports = {
@@ -84,5 +92,6 @@ module.exports = {
     swapInfo,
     diskInfo,
     netUsage,
-    uptimeServer
+    uptimeServer,
+    timeSystem
 }

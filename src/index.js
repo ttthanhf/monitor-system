@@ -5,7 +5,8 @@ const {
     swapInfo,
     diskInfo,
     netUsage,
-    uptimeServer
+    uptimeServer,
+    timeSystem
 } = require('./utils/systeminfo')
 
 const path = require('path')
@@ -59,7 +60,9 @@ http.createServer((req, res) => {
 
             let uptime = uptimeServer();
 
-            res.write(`data: ${JSON.stringify({ cpuUsage, ramUsage, internetUsage, uptime, swapUsage, diskUsage })}\n\n`);
+            let systemTime = timeSystem();
+
+            res.write(`data: ${JSON.stringify({ cpuUsage, ramUsage, internetUsage, uptime, swapUsage, diskUsage, systemTime })}\n\n`);
 
         }, 1000);
 
